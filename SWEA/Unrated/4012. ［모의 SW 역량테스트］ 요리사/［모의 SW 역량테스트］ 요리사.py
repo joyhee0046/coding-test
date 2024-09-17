@@ -1,53 +1,40 @@
+### 요리사_n*n시너지배열을 두집단으로 나눠서 시너지 값 구하기
 # import sys
-# sys.stdin = open("sample_input.txt", "r")
+# sys.stdin = open('sample_input.txt', 'r')
 
-# 요리할 수 있는 조합 생성 함수
-def comb(arr, n):
-    result = []
+# 레시피 조합 찾기
+def search_recipe(index_list, n):
     if n == 1:
-        return [[i] for i in arr]
-    for i in range(len(arr)):
-        elem = arr[i]
-        for rest in comb(arr[i + 1:], n - 1):
-            result.append([elem] + rest)
+        return [[i] for i in index_list]
+    result = []
+    for i in range(len(index_list) - 1):
+        for j in search_recipe(index_list[i + 1:], n - 1):
+            result.append([index_list[i]] + j)
     return result
 
-T = int(input())
-for tc in range(1, T+1):
-    N = int(input())
-    synergy = [list(map(int, input().split())) for _ in range(N)]
-    food_list = comb([i for i in range(N)], N/2)
-    syn_list1 = []
-    syn_list2 = []
-    temp = []
-    for j in range(len(food_list)):
-        syn_list1.append(comb([i for i in food_list[j]], 2))
-        for z in range(N):
-            if z in food_list[j]:
-                continue
-            temp.append(z)
-        syn_list2.append(comb(temp, 2))
-        temp = []
+# 주어진 입력받기
+test_case = int(input())
+for t in range(test_case):
+    n = int(input())
+    recipe = [list(map(int, input().split())) for _ in range(n)]
+    # 갱신할 목표 변수 만들기
+    min_diff = float('inf')
+    # 차집합을 만들기 위한 인덱스 리스트
+    index_set = set(range(n))
+    # 레시피 조합 찾아서 리스트로 저장
+    comb_list = [[0] + c for c in search_recipe(list(range(1, n)), n // 2 - 1)]
+    # 레시피 조합을 돌면서 시너지 점수 확인
+    for comb in comb_list:
+        comb2 = list(index_set - set(comb))
+        food1, food2 = 0, 0
+        # 시너지 저장된 칸 돌면서 음식 점수 계산
+        for i_idx, (i1, i2) in enumerate(zip(comb, comb2)):
+            for j1, j2 in zip(comb[i_idx + 1:], comb2[i_idx + 1:]):
+                # 음식 맛 계산하기
+                food1 += recipe[i1][j1] + recipe[j1][i1]
+                food2 += recipe[i2][j2] + recipe[j2][i2]
+        # 두 집단 간의 차이가 가장 적도록 갱신
+        min_diff = min(min_diff, abs(food1 - food2))
 
-    point1 = []
-    point2 = []
-    syn_score = 0
-    for num_of_c in syn_list1:
-        for i, j in num_of_c:
-            syn_score = syn_score + synergy[i][j] + synergy[j][i]
-        point1.append(syn_score)
-        syn_score = 0
-    for num_of_c in syn_list2:
-        for i, j in num_of_c:
-            syn_score = syn_score + synergy[i][j] + synergy[j][i]
-        point2.append(syn_score)
-        syn_score = 0
-
-    diff = []
-    for i in range(len(point1)):
-        diff.append(abs(point1[i]-point2[i]))
-    print(f"#{tc} {min(diff)}")
-    # print(synergy)
-    # print(food_list)
-    # print(syn_list1)
-    # print(syn_list2)
+    # 정답 출력
+    print(f"#{t + 1} {min_diff}")
